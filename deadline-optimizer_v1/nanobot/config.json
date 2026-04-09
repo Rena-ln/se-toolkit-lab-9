@@ -1,0 +1,41 @@
+{
+  "agent": {
+    "name": "deadline-optimizer-agent",
+    "model": "${NANOBOT_MODEL:-coder-model}",
+    "provider": {
+      "name": "${NANOBOT_PROVIDER:-custom}",
+      "api_base": "${NANOBOT_API_BASE:-http://localhost:42005/v1}",
+      "api_key_env": "QWEN_CODE_API_KEY"
+    },
+    "maxTokens": "${NANOBOT_MAX_TOKENS:-8192}",
+    "temperature": "${NANOBOT_TEMPERATURE:-0.1}",
+    "maxToolIterations": "${NANOBOT_MAX_TOOL_ITERATIONS:-40}"
+  },
+  "gateway": {
+    "host": "0.0.0.0",
+    "port": 18790
+  },
+  "tools": {
+    "exec": {
+      "enabled": true
+    }
+  },
+  "mcpServers": {
+    "deadline-optimizer": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "deadline_mcp"],
+      "cwd": "/app/mcp",
+      "env": {
+        "DO_API_BASE_URL": "http://backend:8000/api/v1",
+        "DO_API_KEY": "${NANOBOT_ACCESS_KEY:-dev-api-key}"
+      }
+    }
+  },
+  "channels": {
+    "webchat": {
+      "enabled": true,
+      "host": "0.0.0.0",
+      "port": 8765
+    }
+  }
+}

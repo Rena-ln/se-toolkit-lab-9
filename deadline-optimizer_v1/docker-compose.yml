@@ -1,0 +1,156 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: do-backend
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    env_file:
+      - .env.docker.secret
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - BACKEND_HOST=0.0.0.0
+      - BACKEND_PORT=8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - do-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: do-postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/app/data/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "54321:5432"
+    networks:
+      - do-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: do-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "54320:80"
+    depends_on:
+      - postgres
+    networks:
+      - do-network
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.9-alpine
+    container_name: do-caddy
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+      - client-web-react
+    networks:
+      - do-network
+    restart: unless-stopped
+
+  client-web-react:
+    build:
+      context: ./client-web-react
+      dockerfile: Dockerfile
+    container_name: do-frontend
+    volumes:
+      - ./client-web-react:/app
+    env_file:
+      - client-web-react/.env
+    depends_on:
+      - backend
+    networks:
+      - do-network
+    restart: unless-stopped
+
+  nanobot:
+    build:
+      context: ./nanobot
+      dockerfile: Dockerfile
+    container_name: do-nanobot
+    volumes:
+      - ./nanobot:/app/nanobot
+      - ./mcp:/app/mcp
+    env_file:
+      - .env.docker.secret
+    environment:
+      - NANOBOT_MODEL=${NANOBOT_MODEL}
+      - NANOBOT_PROVIDER=${NANOBOT_PROVIDER}
+      - NANOBOT_API_BASE=${NANOBOT_API_BASE}
+      - NANOBOT_ACCESS_KEY=${NANOBOT_ACCESS_KEY}
+    depends_on:
+      - backend
+    ports:
+      - "18790:18790"
+      - "8765:8765"
+    networks:
+      - do-network
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: do-otel
+    volumes:
+      - ./otel-collector/config.yaml:/etc/otel/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - do-network
+    restart: unless-stopped
+
+  victorialogs:
+    image: victoriametrics/victoria-logs:latest
+    container_name: do-victorialogs
+    ports:
+      - "42010:9428"
+    volumes:
+      - victorialogs_data:/victoria-logs-data
+    networks:
+      - do-network
+    restart: unless-stopped
+
+  victoriatraces:
+    image: victoriametrics/victoria-traces:latest
+    container_name: do-victoriatraces
+    ports:
+      - "42011:8428"
+    volumes:
+      - victoriatraces_data:/victoria-traces-data
+    networks:
+      - do-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+  victorialogs_data:
+  victoriatraces_data:
+
+networks:
+  do-network:
+    driver: bridge

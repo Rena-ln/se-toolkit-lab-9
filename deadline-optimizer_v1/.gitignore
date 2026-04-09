@@ -1,0 +1,67 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv
+.venv-backup
+
+# Distribution / packaging
+*.egg-info/
+*.egg
+
+# PyInstaller
+*.spec
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+
+# Testing
+.pytest_cache/
+.ruff_cache/
+coverage/
+.coverage
+htmlcov/
+
+# Docker
+*.secret
+.env.docker.secret
+client-web-react/.env.local
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Nix
+.direnv/
+
+# Logs
+*.log
+logs/
+
+# Temp
+tmp/
+temp/
+
+# Build artifacts
+build/
+
+# Lychee cache
+.lycheecache
