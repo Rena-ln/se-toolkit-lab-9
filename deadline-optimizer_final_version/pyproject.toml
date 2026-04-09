@@ -1,0 +1,34 @@
+[project]
+name = "deadline-optimizer-workspace"
+version = "0.1.0"
+description = "AI-powered personal deadline tracker workspace"
+requires-python = ">=3.12"
+
+[tool.uv.workspace]
+members = ["backend", "mcp", "nanobot"]
+
+[tool.poe.tasks]
+dev = "uv run uvicorn backend.app.run:app --reload"
+check = ["format", "lint", "typecheck"]
+format = "ruff format"
+lint = "ruff check"
+typecheck = "pyright"
+test = ["test-unit", "test-e2e"]
+test-unit = "pytest backend/tests/unit -v"
+test-e2e = "pytest backend/tests/e2e -v"
+
+[tool.pyright]
+include = ["backend", "mcp"]
+exclude = ["**/__pycache__", "**/node_modules", "**/.*", ".venv", ".direnv"]
+typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["backend"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]

@@ -1,0 +1,33 @@
+:80
+
+# API routes -> Backend
+handle /api/v1/* {
+    reverse_proxy backend:8000
+}
+
+# API docs -> Backend
+handle /docs {
+    reverse_proxy backend:8000
+}
+
+handle /openapi.json {
+    reverse_proxy backend:8000
+}
+
+# Health check -> Backend
+handle /health {
+    reverse_proxy backend:8000
+}
+
+# Agent websocket chat -> Nanobot
+handle /ws/chat {
+    reverse_proxy nanobot:8765
+}
+
+# Frontend SPA (serve static files from /srv)
+handle {
+    root * /srv
+    encode gzip
+    try_files {path} /index.html
+    file_server
+}

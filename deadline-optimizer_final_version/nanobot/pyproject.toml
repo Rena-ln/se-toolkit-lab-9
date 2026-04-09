@@ -1,0 +1,9 @@
+[project]
+name = "deadline-optimizer-nanobot"
+version = "0.1.0"
+description = "Nanobot agent for Assignment Deadline Optimizer"
+requires-python = ">=3.12"
+dependencies = [
+    "nanobot[websocket]>=0.1.0",
+    "deadline-mcp @ file:../mcp",
+]
